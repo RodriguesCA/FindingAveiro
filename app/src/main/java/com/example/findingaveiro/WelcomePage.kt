@@ -1,9 +1,9 @@
 package com.example.findingaveiro
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,15 +41,20 @@ class WelcomePage : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Welcome()
+                    Welcome { navigateToMainActivity() }
                 }
             }
         }
     }
+
+    private fun navigateToMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+    }
 }
 
 @Composable
-fun Welcome() {
+fun Welcome(onConfirm: () -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -111,7 +116,7 @@ fun Welcome() {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /* Handle login */ }) {
+        Button(onClick = onConfirm) {
             Text(text = "Confirm")
         }
     }
