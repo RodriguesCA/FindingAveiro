@@ -12,10 +12,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FindingAveiro"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FindingAveiro">
+        </activity>
+
+        <activity
+            android:name=".WelcomePage"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.FindingAveiro">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,9 +30,15 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ShopPage"
+            android:exported="false"
+            android:theme="@style/Theme.FindingAveiro">
+        </activity>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="${GOOGLE_MAPS_API_KEY}" />
+            android:value="AIzaSyAyneHrqVOumAUP4ZEXEAdnT3AZh0Ms-yI" />
 
     </application>
 
