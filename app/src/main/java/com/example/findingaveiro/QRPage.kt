@@ -1,48 +1,45 @@
-package com.example.findingaveiro
-
-import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.findingaveiro.R
 import com.example.findingaveiro.ui.theme.FindingAveiroTheme
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.GoogleMapComposable
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 
-class MainActivity : ComponentActivity() {
+class QRCodePage : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             FindingAveiroTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Main{ navigateToShop() }
+                    QRCodeScreen(content = "Hello, QR Code!", {})
                 }
             }
         }
-    }
-
-    private fun navigateToShop() {
-        val intent = Intent(this, ShopPage::class.java)
-        startActivity(intent)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Main(onIconClick: () -> Unit) {
-    var isMapLoaded by remember { mutableStateOf(false) }
+fun QRCodeScreen(content: String, onIconClick: () -> Unit) {
+    val qrCodeBitmap = remember { generateQRCode(content, 512) }
 
     Scaffold(
         topBar = {
@@ -79,24 +76,47 @@ fun Main(onIconClick: () -> Unit) {
                 }
             )
         }
-    ) {
-        innerPadding -> Box(
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(innerPadding),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            GoogleMap (
-                modifier = Modifier.fillMaxSize(),
-                onMapLoaded = { isMapLoaded = true }
+            Text(text = "Scan this QR Code", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(16.dp))
+            Image(
+                bitmap = qrCodeBitmap.asImageBitmap(),
+                contentDescription = "Generated QR Code",
+                modifier = Modifier.size(256.dp)
             )
         }
     }
 }
 
+fun generateQRCode(content: String, size: Int): Bitmap {
+    val writer = QRCodeWriter()
+    val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, size, size)
+    val width = bitMatrix.width
+    val height = bitMatrix.height
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+    for (x in 0 until width) {
+        for (y in 0 until height) {
+            if (bitMatrix.get(x, y)) {
+                bitmap.setPixel(x, y, android.graphics.Color.BLACK)
+            } else {
+                bitmap.setPixel(x, y, android.graphics.Color.WHITE)
+            }
+        }
+    }
+    return bitmap
+}
+
 @Preview(showBackground = true)
 @Composable
-fun MainPagePreview() {
+fun QRCodeScreenPreview() {
     FindingAveiroTheme {
-        Main{}
+        QRCodeScreen(content = "Hello, QR Code!", {})
     }
 }
