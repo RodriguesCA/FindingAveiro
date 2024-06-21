@@ -57,7 +57,7 @@ fun MainMap(onCartClick: () -> Unit) {
     Scaffold (
         topBar = {
             TopAppBar(
-                title = { Text("Afonso") },
+                title = { Text("FindingAveiro") },
                 actions = {
                     IconButton(onClick = onCartClick) {
                         Icon(Icons.Filled.ShoppingCart, contentDescription = null)

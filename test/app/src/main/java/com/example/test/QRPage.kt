@@ -44,7 +44,7 @@ class QRPage : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QRCodeScreen(onButtonClick: () -> Unit) {
-    val qrCodeBitmap = remember { generateQRCode("10000", 512) }
+    val qrCodeBitmap = remember { generateQRCode("Desconto FindingAveiro", 512) }
 
     Scaffold(
         topBar = {
