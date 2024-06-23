@@ -76,6 +76,7 @@ dependencies {
     implementation("com.google.maps.android:maps-compose-widgets:$mapsComposeVersion")
     implementation("com.google.zxing:core:3.4.1")
     implementation("com.journeyapps:zxing-android-embedded:4.2.0")
+
 }
 
 secrets {
