@@ -15,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +45,7 @@ class ShopPage : ComponentActivity() {
         val intent = Intent(this, QRPage::class.java)
         startActivity(intent)
     }
+
     private fun navigateToMapPage() {
         val intent = Intent(this, MapPage::class.java)
         startActivity(intent)
@@ -81,14 +84,20 @@ fun ShopContent(modifier: Modifier = Modifier, onRedeemClick: () -> Unit) {
             .padding(16.dp)
     ) {
         repeat(5) { index ->
-            ShopItemCard(itemName = "Item $index", itemPrice = "$${index * 10}", onRedeemClick = onRedeemClick)
+            ShopItemCard(
+                itemName = "Item $index",
+                itemPrice = "$${index * 10}",
+                itemDescription = "This is a description of item $index.",
+                icon = Icons.Default.ShoppingCart,
+                onRedeemClick = onRedeemClick
+            )
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
 @Composable
-fun ShopItemCard(itemName: String, itemPrice: String, onRedeemClick: () -> Unit) {
+fun ShopItemCard(itemName: String, itemPrice: String, itemDescription: String, icon: ImageVector, onRedeemClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
@@ -104,11 +113,23 @@ fun ShopItemCard(itemName: String, itemPrice: String, onRedeemClick: () -> Unit)
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
-                Text(text = itemName, style = TextStyle(fontSize = 20.sp))
+            Column(modifier = Modifier.weight(1f)) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(60.dp)
+                        .padding(bottom = 8.dp)
+                )
+                Text(text = itemName, style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold))
                 Text(text = itemPrice, style = TextStyle(fontSize = 16.sp, color = Color.Gray))
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = itemDescription, style = TextStyle(fontSize = 14.sp, color = Color.Gray))
             }
-            Button(onClick = onRedeemClick) {
+            Button(
+                onClick = onRedeemClick,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
                 Text(text = "Redeem")
             }
         }
