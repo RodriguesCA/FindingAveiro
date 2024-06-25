@@ -50,6 +50,12 @@
             android:theme="@style/Theme.Test">
         </activity>
 
+        <activity
+            android:name=".QRCodeScannerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Test">
+        </activity>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
