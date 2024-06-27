@@ -1,9 +1,11 @@
+// ShopPage.kt
 package com.example.test
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,19 +13,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.test.ui.theme.TestTheme
+import androidx.compose.runtime.livedata.observeAsState
+
 
 class ShopPage : ComponentActivity() {
+    private val pointsViewModel by viewModels<PointsViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -33,6 +40,7 @@ class ShopPage : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     ShopScreen(
+                        pointsViewModel,
                         { navigateToQRPage() },
                         { navigateToMapPage() }
                     )
@@ -54,14 +62,19 @@ class ShopPage : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShopScreen(onRedeemClick: () -> Unit, onArrowClick: () -> Unit) {
+fun ShopScreen(pointsViewModel: PointsViewModel, onRedeemClick: () -> Unit, onArrowClick: () -> Unit) {
+    val points by pointsViewModel.points.observeAsState(0)
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Shop") },
                 actions = {
-                    IconButton(onClick = { /* Handle cart icon click */ }) {
-                        Icon(Icons.Filled.ShoppingCart, contentDescription = "Cart")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { /* Handle cart icon click */ }) {
+                            Icon(Icons.Filled.ShoppingCart, contentDescription = "Cart")
+                        }
+                        Text("Points: $points", Modifier.padding(start = 8.dp))
                     }
                 },
                 navigationIcon = {
@@ -140,6 +153,6 @@ fun ShopItemCard(itemName: String, itemPrice: String, itemDescription: String, i
 @Composable
 fun ShopScreenPreview() {
     TestTheme {
-        ShopScreen({}, {})
+        ShopScreen(pointsViewModel = viewModel(), onRedeemClick = {}, onArrowClick = {})
     }
 }

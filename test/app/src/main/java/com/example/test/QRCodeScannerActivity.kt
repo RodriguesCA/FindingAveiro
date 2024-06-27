@@ -9,7 +9,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
@@ -25,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import com.example.test.ui.theme.TestTheme
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -36,12 +39,15 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.shouldShowRationale
 
 class QRCodeScannerActivity : ComponentActivity() {
+    private val pointsViewModel by viewModels<PointsViewModel>()
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val polygonId = intent.getStringExtra("POLYGON_ID")?:return
         setContent {
             TestTheme {
-                QRCodeScannerScreen({navigateToShopPage()}, {navigateToMapPage()})
+                QRCodeScannerScreen({navigateToShopPage()}, {navigateToMapPage()},pointsViewModel)
             }
         }
     }
@@ -56,10 +62,10 @@ class QRCodeScannerActivity : ComponentActivity() {
 }
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit) {
+fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit, pointsViewModel: PointsViewModel) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 
-    Scaffold (
+    Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("FindingAveiro") },
@@ -77,7 +83,7 @@ fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit) {
         },
     ) {
         if (cameraPermissionState.status.isGranted) {
-            CameraScreen(modifier = Modifier.padding(it))
+            CameraScreen(modifier = Modifier.padding(it), pointsViewModel)
         } else if (cameraPermissionState.status.shouldShowRationale) {
             Text("Camera Permission permanently denied")
         } else {
@@ -90,20 +96,18 @@ fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit) {
 }
 
 @Composable
-fun CameraScreen(modifier: Modifier) {
+fun CameraScreen(modifier: Modifier, pointsViewModel: PointsViewModel) {
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraProviderFuture = remember {
-        ProcessCameraProvider.getInstance(localContext)
-    }
+    val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(localContext) }
+
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
             val previewView = PreviewView(context)
             val preview = Preview.Builder().build()
-            val selector = CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                .build()
+            val selector = CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
+            val analyzer = BarcodeAnalyzer(context, pointsViewModel)
 
             preview.setSurfaceProvider(previewView.surfaceProvider)
 
@@ -111,39 +115,45 @@ fun CameraScreen(modifier: Modifier) {
                 cameraProviderFuture.get().bindToLifecycle(
                     lifecycleOwner,
                     selector,
-                    preview
+                    preview,
+                    ImageAnalysis.Builder().build().also {
+                        it.setAnalyzer(ContextCompat.getMainExecutor(context), analyzer)
+                    }
                 )
             }.onFailure {
                 Log.e("CAMERA", "Camera bind error ${it.localizedMessage}", it)
             }
+
             previewView
         }
     )
 }
 
-class BarcodeAnalyzer(private val context: Context) : ImageAnalysis.Analyzer {
-
-    private val options = BarcodeScannerOptions.Builder()
-        .setBarcodeFormats(Barcode.FORMAT_QR_CODE, Barcode.FORMAT_CODABAR)
-        .build()
-
+class BarcodeAnalyzer(private val context: Context, private val pointsViewModel: PointsViewModel) : ImageAnalysis.Analyzer {
+    private val options = BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
     private val scanner = BarcodeScanning.getClient(options)
 
-    @SuppressLint("UnsafeOptInUsageError")
+    @androidx.annotation.OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
-        imageProxy.image?.let { image ->
-            scanner.process(
-                InputImage.fromMediaImage(
-                    image, imageProxy.imageInfo.rotationDegrees
-                )
-            ).addOnSuccessListener { barcode ->
-                barcode?.takeIf { it.isNotEmpty() }
-                    ?.mapNotNull { it.rawValue }
-                    ?.joinToString(",")
-                    ?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
-            }.addOnCompleteListener {
-                imageProxy.close()
-            }
+        val mediaImage = imageProxy.image
+        if (mediaImage != null) {
+            val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+            scanner.process(image)
+                .addOnSuccessListener { barcodes ->
+                    for (barcode in barcodes) {
+                        barcode.rawValue?.let {
+                            // Assuming 500 points are added for each QR code scanned
+                            pointsViewModel.addPoints(500)
+                            Toast.makeText(context, "Scanned: $it", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                .addOnFailureListener {
+                    Log.e("BarcodeAnalyzer", "Error processing image: ${it.localizedMessage}")
+                }
+                .addOnCompleteListener {
+                    imageProxy.close()
+                }
         }
     }
 }
