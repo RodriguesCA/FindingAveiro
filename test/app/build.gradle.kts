@@ -83,6 +83,8 @@ dependencies {
     implementation("androidx.camera:camera-view:$cameraxVersion")
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
     implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
+    implementation("io.coil-kt:coil-compose:2.0.0") // For image loading
+    implementation("androidx.compose.material3:material3:1.0.0") // For Material3 components
 
 }
 

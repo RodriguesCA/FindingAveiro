@@ -40,22 +40,23 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Welcome {
-                        navigateToMapActivity()
+                    Welcome { username ->
+                        navigateToMapActivity(username)
                     }
                 }
             }
         }
     }
 
-    private fun navigateToMapActivity() {
+    private fun navigateToMapActivity(username: String) {
         val intent = Intent(this, MapPage::class.java)
+        intent.putExtra("USERNAME", username)
         startActivity(intent)
     }
 }
 
 @Composable
-fun Welcome(onConfirm: () -> Unit) {
+fun Welcome(onConfirm: (String) -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -101,7 +102,7 @@ fun Welcome(onConfirm: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = onConfirm,
+            onClick = { onConfirm(username) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
@@ -110,6 +111,7 @@ fun Welcome(onConfirm: () -> Unit) {
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

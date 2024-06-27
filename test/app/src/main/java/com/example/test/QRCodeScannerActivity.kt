@@ -38,6 +38,7 @@ import com.google.accompanist.permissions.shouldShowRationale
 class QRCodeScannerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val polygonId = intent.getStringExtra("POLYGON_ID")?:return
         setContent {
             TestTheme {
                 QRCodeScannerScreen({navigateToShopPage()}, {navigateToMapPage()})
