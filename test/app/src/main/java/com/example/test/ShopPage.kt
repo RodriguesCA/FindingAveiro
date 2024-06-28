@@ -65,7 +65,7 @@ class ShopPage : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShopScreen(sharedViewModel: SharedViewModel, onRedeemClick: () -> Unit, onArrowClick: () -> Unit) {
-    val points by sharedViewModel.points.observeAsState(0)
+    val points by sharedViewModel.points.observeAsState()
 
     Scaffold(
         topBar = {
@@ -88,14 +88,16 @@ fun ShopScreen(sharedViewModel: SharedViewModel, onRedeemClick: () -> Unit, onAr
         },
     ) { innerPadding ->
         ShopContent(
-            modifier = Modifier.padding(innerPadding),
-            pointsViewModel = pointsViewModel
+            modifier = Modifier
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState()),
+            sharedViewModel = sharedViewModel
         )
     }
 }
 
 @Composable
-fun ShopContent(modifier: Modifier = Modifier, pointsViewModel: PointsViewModel) {
+fun ShopContent(modifier: Modifier = Modifier, sharedViewModel: SharedViewModel) {
     val items = listOf(
         ShopItem("Ramona", "", "10% de desconto nas batatas", 50, "QRCodeStoreA"),
         ShopItem("CUA", "", "1 fino de graça", 100, "QRCodeStoreB"),
@@ -116,7 +118,7 @@ fun ShopContent(modifier: Modifier = Modifier, pointsViewModel: PointsViewModel)
                 icon = Icons.Default.ShoppingCart,
                 pointsToRedeem = item.points,
                 qrCodeContent = item.qrCodeContent,
-                pointsViewModel = pointsViewModel
+                sharedViewModel = sharedViewModel
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -131,9 +133,9 @@ fun ShopItemCard(
     icon: ImageVector,
     pointsToRedeem: Int,
     qrCodeContent: String,
-    pointsViewModel: PointsViewModel
+    sharedViewModel: SharedViewModel
 ) {
-    var isRedeemed by remember { mutableStateOf(pointsViewModel.isItemRedeemed(itemName)) }
+    var isRedeemed by remember { mutableStateOf(sharedViewModel.isItemRedeemed(itemName)) }
     var showQRCode by remember { mutableStateOf(false) }
 
 
@@ -148,10 +150,7 @@ fun ShopItemCard(
         Column(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-            ,
-
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -177,7 +176,7 @@ fun ShopItemCard(
                 if (!isRedeemed) {
                     Button(
                         onClick = {
-                            if (pointsViewModel.redeemItem(itemName, pointsToRedeem)) {
+                            if (sharedViewModel.redeemItem(itemName, pointsToRedeem)) {
                                 isRedeemed = true
                                 showQRCode = true
                             }
@@ -203,7 +202,9 @@ fun ShopItemCard(
                 Image(
                     bitmap = qrCodeBitmap.asImageBitmap(),
                     contentDescription = "Generated QR Code",
-                    modifier = Modifier.size(128.dp).padding(8.dp)
+                    modifier = Modifier
+                        .size(128.dp)
+                        .padding(8.dp)
                 )
             }
         }
