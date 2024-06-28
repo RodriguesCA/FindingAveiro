@@ -1,4 +1,3 @@
-// ShopPage.kt
 package com.example.test
 
 import android.content.Intent
@@ -6,9 +5,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -26,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.test.ui.theme.TestTheme
 import androidx.compose.runtime.livedata.observeAsState
-
+import androidx.compose.ui.graphics.asImageBitmap
 
 class ShopPage : ComponentActivity() {
     private val pointsViewModel by viewModels<PointsViewModel>()
@@ -85,24 +87,36 @@ fun ShopScreen(pointsViewModel: PointsViewModel, onRedeemClick: () -> Unit, onAr
             )
         },
     ) { innerPadding ->
-        ShopContent(modifier = Modifier.padding(innerPadding), onRedeemClick = onRedeemClick)
+        ShopContent(
+            modifier = Modifier.padding(innerPadding),
+            pointsViewModel = pointsViewModel
+        )
     }
 }
 
 @Composable
-fun ShopContent(modifier: Modifier = Modifier, onRedeemClick: () -> Unit) {
+fun ShopContent(modifier: Modifier = Modifier, pointsViewModel: PointsViewModel) {
+    val items = listOf(
+        ShopItem("Ramona", "", "10% de desconto nas batatas", 50, "QRCodeStoreA"),
+        ShopItem("CUA", "", "1 fino de graça", 100, "QRCodeStoreB"),
+        ShopItem("Boteco", "", "2 euros de desconto no Mojito", 150, "QRCodeStoreC"),
+        ShopItem("Love Store", "", "Ofera de Um Cafe", 200, "QRCodeStoreD"),
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        repeat(5) { index ->
+        items.forEach { item ->
             ShopItemCard(
-                itemName = "Item $index",
-                itemPrice = "$${index * 10}",
-                itemDescription = "This is a description of item $index.",
+                itemName = item.name,
+                itemPrice = item.price,
+                itemDescription = item.description,
                 icon = Icons.Default.ShoppingCart,
-                onRedeemClick = onRedeemClick
+                pointsToRedeem = item.points,
+                qrCodeContent = item.qrCodeContent,
+                pointsViewModel = pointsViewModel
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -110,7 +124,19 @@ fun ShopContent(modifier: Modifier = Modifier, onRedeemClick: () -> Unit) {
 }
 
 @Composable
-fun ShopItemCard(itemName: String, itemPrice: String, itemDescription: String, icon: ImageVector, onRedeemClick: () -> Unit) {
+fun ShopItemCard(
+    itemName: String,
+    itemPrice: String,
+    itemDescription: String,
+    icon: ImageVector,
+    pointsToRedeem: Int,
+    qrCodeContent: String,
+    pointsViewModel: PointsViewModel
+) {
+    var isRedeemed by remember { mutableStateOf(pointsViewModel.isItemRedeemed(itemName)) }
+    var showQRCode by remember { mutableStateOf(false) }
+
+
     Card(
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
@@ -119,35 +145,71 @@ fun ShopItemCard(itemName: String, itemPrice: String, itemDescription: String, i
             .padding(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+            ,
+
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .padding(bottom = 8.dp)
-                )
-                Text(text = itemName, style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold))
-                Text(text = itemPrice, style = TextStyle(fontSize = 16.sp, color = Color.Gray))
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = itemDescription, style = TextStyle(fontSize = 14.sp, color = Color.Gray))
-            }
-            Button(
-                onClick = onRedeemClick,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "Redeem")
+                Column(modifier = Modifier.weight(1f)) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .padding(bottom = 8.dp)
+                    )
+                    Text(text = itemName, style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold))
+                    Text(text = itemPrice, style = TextStyle(fontSize = 16.sp, color = Color.Gray))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = itemDescription, style = TextStyle(fontSize = 14.sp, color = Color.Gray))
+                }
+                if (!isRedeemed) {
+                    Button(
+                        onClick = {
+                            if (pointsViewModel.redeemItem(itemName, pointsToRedeem)) {
+                                isRedeemed = true
+                                showQRCode = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Text(text = "Redeem ($pointsToRedeem pts)")
+                    }
+                } else {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = "Redeemed", color = Color.Green, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { showQRCode = true }) {
+                            Text(text = "View QR Code")
+                        }
+                    }
+                }
+            }
+            if (showQRCode) {
+                val qrCodeBitmap = generateQRCode(qrCodeContent, 256)
+                Image(
+                    bitmap = qrCodeBitmap.asImageBitmap(),
+                    contentDescription = "Generated QR Code",
+                    modifier = Modifier.size(128.dp).padding(8.dp)
+                )
             }
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
@@ -156,3 +218,11 @@ fun ShopScreenPreview() {
         ShopScreen(pointsViewModel = viewModel(), onRedeemClick = {}, onArrowClick = {})
     }
 }
+
+data class ShopItem(
+    val name: String,
+    val price: String,
+    val description: String,
+    val points: Int,
+    val qrCodeContent: String
+)
