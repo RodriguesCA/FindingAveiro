@@ -39,7 +39,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.shouldShowRationale
 
 class QRCodeScannerActivity : ComponentActivity() {
-    private val pointsViewModel by viewModels<PointsViewModel>()
+    private val sharedViewModel by viewModels<SharedViewModel>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +47,7 @@ class QRCodeScannerActivity : ComponentActivity() {
         val polygonId = intent.getStringExtra("POLYGON_ID")?:return
         setContent {
             TestTheme {
-                QRCodeScannerScreen({navigateToShopPage()}, {navigateToMapPage()},pointsViewModel)
+                QRCodeScannerScreen({navigateToShopPage()}, {navigateToMapPage()}, sharedViewModel)
             }
         }
     }
@@ -62,7 +62,7 @@ class QRCodeScannerActivity : ComponentActivity() {
 }
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit, pointsViewModel: PointsViewModel) {
+fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit, pointsViewModel: SharedViewModel) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 
     Scaffold(
@@ -96,7 +96,7 @@ fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit, poi
 }
 
 @Composable
-fun CameraScreen(modifier: Modifier, pointsViewModel: PointsViewModel) {
+fun CameraScreen(modifier: Modifier, pointsViewModel: SharedViewModel) {
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(localContext) }
@@ -129,7 +129,7 @@ fun CameraScreen(modifier: Modifier, pointsViewModel: PointsViewModel) {
     )
 }
 
-class BarcodeAnalyzer(private val context: Context, private val pointsViewModel: PointsViewModel) : ImageAnalysis.Analyzer {
+class BarcodeAnalyzer(private val context: Context, private val pointsViewModel: SharedViewModel) : ImageAnalysis.Analyzer {
     private val options = BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
     private val scanner = BarcodeScanning.getClient(options)
 

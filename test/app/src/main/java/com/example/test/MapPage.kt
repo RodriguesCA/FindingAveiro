@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,17 +32,21 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.rememberMarkerState
 
 class MapPage : ComponentActivity() {
+    private val sharedViewModel: SharedViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             TestTheme {
                 // A surface container using the 'background' color from the theme
@@ -50,11 +55,10 @@ class MapPage : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     MainMap(
+                        sharedViewModel = sharedViewModel,
                         onCartClick = { navigateToShopPage() },
                         onProfileClick = { navigateToProfilePage() },
                         onQRCodeScan = { polygonId -> navigateToQRCodeScanner(polygonId) }
-
-
                     )
                 }
             }
@@ -85,12 +89,12 @@ data class PolygonData(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainMap(onCartClick: () -> Unit,onProfileClick: () -> Unit, onQRCodeScan: (String) -> Unit){
+fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfileClick: () -> Unit, onQRCodeScan: (String) -> Unit){
     val aveiro = LatLng(40.6412,  -8.65362)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(aveiro, 10f)
     }
-
+    val username by sharedViewModel.username
 
     var polygonData by remember {
         mutableStateOf(listOf(
@@ -221,7 +225,7 @@ fun MainMap(onCartClick: () -> Unit,onProfileClick: () -> Unit, onQRCodeScan: (S
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("FindingAveiro") },
+                title = { Text(username) },
                 actions = {
                     IconButton(onClick = onCartClick) {
                         Icon(Icons.Filled.ShoppingCart, contentDescription = null)
@@ -324,6 +328,11 @@ fun calculateCentroid(points: List<LatLng>): LatLng {
 @Composable
 fun MapPreview() {
     TestTheme {
-        MainMap(onCartClick = {}, onProfileClick = {}, onQRCodeScan = {})
+        MainMap(
+            sharedViewModel = viewModel(),
+            onCartClick = {},
+            onProfileClick = {},
+            onQRCodeScan = {}
+        )
     }
 }

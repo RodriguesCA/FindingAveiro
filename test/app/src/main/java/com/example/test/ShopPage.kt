@@ -29,7 +29,7 @@ import androidx.compose.runtime.livedata.observeAsState
 
 
 class ShopPage : ComponentActivity() {
-    private val pointsViewModel by viewModels<PointsViewModel>()
+    private val sharedViewModel by viewModels<SharedViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +40,7 @@ class ShopPage : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     ShopScreen(
-                        pointsViewModel,
+                        sharedViewModel,
                         { navigateToQRPage() },
                         { navigateToMapPage() }
                     )
@@ -62,8 +62,8 @@ class ShopPage : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShopScreen(pointsViewModel: PointsViewModel, onRedeemClick: () -> Unit, onArrowClick: () -> Unit) {
-    val points by pointsViewModel.points.observeAsState(0)
+fun ShopScreen(sharedViewModel: SharedViewModel, onRedeemClick: () -> Unit, onArrowClick: () -> Unit) {
+    val points by sharedViewModel.points.observeAsState(0)
 
     Scaffold(
         topBar = {
@@ -153,6 +153,6 @@ fun ShopItemCard(itemName: String, itemPrice: String, itemDescription: String, i
 @Composable
 fun ShopScreenPreview() {
     TestTheme {
-        ShopScreen(pointsViewModel = viewModel(), onRedeemClick = {}, onArrowClick = {})
+        ShopScreen(sharedViewModel = viewModel(), onRedeemClick = {}, onArrowClick = {})
     }
 }

@@ -4,9 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,18 +20,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.test.ui.theme.TestTheme
 
 class MainActivity : ComponentActivity() {
+    private val sharedViewModel: SharedViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -40,25 +40,24 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Welcome { username ->
-                        navigateToMapActivity(username)
+                    Welcome (sharedViewModel) {
+                        navigateToMapActivity()
                     }
                 }
             }
         }
     }
 
-    private fun navigateToMapActivity(username: String) {
+    private fun navigateToMapActivity() {
         val intent = Intent(this, MapPage::class.java)
-        intent.putExtra("USERNAME", username)
         startActivity(intent)
     }
 }
 
 @Composable
-fun Welcome(onConfirm: (String) -> Unit) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+fun Welcome(sharedViewModel: SharedViewModel, onConfirm: () -> Unit) {
+    val username by sharedViewModel.username
+    val password by sharedViewModel.password
 
     Column(
         modifier = Modifier
@@ -77,7 +76,7 @@ fun Welcome(onConfirm: (String) -> Unit) {
         // Username Field
         OutlinedTextField(
             value = username,
-            onValueChange = { username = it },
+            onValueChange = { sharedViewModel.updateUsername(it) },
             label = { Text("Username") },
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
@@ -89,7 +88,7 @@ fun Welcome(onConfirm: (String) -> Unit) {
         // Password Field
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = { sharedViewModel.updatePassword(it) },
             label = { Text("Password") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
@@ -102,7 +101,7 @@ fun Welcome(onConfirm: (String) -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { onConfirm(username) },
+            onClick = { onConfirm() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
@@ -117,6 +116,6 @@ fun Welcome(onConfirm: (String) -> Unit) {
 @Composable
 fun WelcomePreview() {
     TestTheme {
-        Welcome {}
+        Welcome (viewModel()) {}
     }
 }
