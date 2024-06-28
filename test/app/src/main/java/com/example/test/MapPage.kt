@@ -86,6 +86,12 @@ data class PolygonData(
     val title: String,
     val snippet: String
 )
+data class StoreData(
+    val id: String,
+    val name: String,
+    val position: LatLng,
+    val snippet: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,6 +101,8 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
         position = CameraPosition.fromLatLngZoom(aveiro, 10f)
     }
     val username by sharedViewModel.username
+
+
 
     var polygonData by remember {
         mutableStateOf(listOf(
@@ -218,8 +226,43 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
         )
     )}
 
+    val storeData by remember {
+        mutableStateOf(
+            listOf(
+                StoreData(
+                    id = "store1",
+                    name = "Ramona",
+                    position = LatLng(40.6381, -8.6513),
+                    snippet = "Melhor Hamburgaria de Aveiro"
+                ),
+                StoreData(
+                    id = "store2",
+                    name = "CUA",
+                    position = LatLng(40.6310, -8.6593),
+                    snippet = "Cuidado com os copos"
+                ),
+                StoreData(
+                    id = "store3",
+                    name = "Boteco",
+                    position = LatLng(40.64313464731195, -8.655556784389967),
+                    snippet = "Mojitos sao bons"
+                ),
+                StoreData(
+                    id = "store4",
+                    name = "Love Store",
+                    position = LatLng(40.63409794242317, -8.648636295746705),
+                    snippet = "Oferta de Um Cafe"
+
+                )
+            )
+        )
+    }
+
+
+
     var selectedMarkerData by remember {mutableStateOf<PolygonData?>(null)}
     val context = LocalContext.current
+
 
 
     Scaffold(
@@ -260,6 +303,14 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                         selectedMarkerData = polygonData
                         true
                     }
+
+                )
+            }
+            storeData.forEach { store ->
+                Marker(
+                    state = rememberMarkerState(position = store.position),
+                    title = store.name,
+                    snippet = store.snippet
 
                 )
             }
