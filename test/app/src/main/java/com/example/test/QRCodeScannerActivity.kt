@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -41,10 +42,8 @@ import com.google.accompanist.permissions.shouldShowRationale
 class QRCodeScannerActivity : ComponentActivity() {
     private val sharedViewModel by viewModels<SharedViewModel>()
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val polygonId = intent.getStringExtra("POLYGON_ID")?:return
         setContent {
             TestTheme {
                 QRCodeScannerScreen({navigateToShopPage()}, {navigateToMapPage()}, sharedViewModel)
@@ -62,7 +61,7 @@ class QRCodeScannerActivity : ComponentActivity() {
 }
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit, pointsViewModel: SharedViewModel) {
+fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit, sharedViewModel: SharedViewModel) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 
     Scaffold(
@@ -70,12 +69,18 @@ fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit, poi
             TopAppBar(
                 title = { Text("FindingAveiro") },
                 actions = {
-                    IconButton(onClick = onButtonClick) {
+                    IconButton(onClick = {
+                        sharedViewModel.updateId("")
+                        onButtonClick()
+                    }) {
                         Icon(Icons.Filled.ShoppingCart, contentDescription = "Cart")
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onArrowClick) {
+                    IconButton(onClick = {
+                        sharedViewModel.updateId("")
+                        onArrowClick()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back")
                     }
                 }
@@ -83,7 +88,7 @@ fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit, poi
         },
     ) {
         if (cameraPermissionState.status.isGranted) {
-            CameraScreen(modifier = Modifier.padding(it), pointsViewModel)
+            CameraScreen(modifier = Modifier.padding(it), sharedViewModel)
         } else if (cameraPermissionState.status.shouldShowRationale) {
             Text("Camera Permission permanently denied")
         } else {
@@ -96,7 +101,7 @@ fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit, poi
 }
 
 @Composable
-fun CameraScreen(modifier: Modifier, pointsViewModel: SharedViewModel) {
+fun CameraScreen(modifier: Modifier, sharedViewModel: SharedViewModel) {
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(localContext) }
@@ -107,7 +112,7 @@ fun CameraScreen(modifier: Modifier, pointsViewModel: SharedViewModel) {
             val previewView = PreviewView(context)
             val preview = Preview.Builder().build()
             val selector = CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
-            val analyzer = BarcodeAnalyzer(context, pointsViewModel)
+            val analyzer = BarcodeAnalyzer(context, sharedViewModel)
 
             preview.setSurfaceProvider(previewView.surfaceProvider)
 
@@ -129,9 +134,10 @@ fun CameraScreen(modifier: Modifier, pointsViewModel: SharedViewModel) {
     )
 }
 
-class BarcodeAnalyzer(private val context: Context, private val pointsViewModel: SharedViewModel) : ImageAnalysis.Analyzer {
+class BarcodeAnalyzer(private val context: Context, private val sharedViewModel: SharedViewModel) : ImageAnalysis.Analyzer {
     private val options = BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
     private val scanner = BarcodeScanning.getClient(options)
+    private val id = sharedViewModel.id.value
 
     @androidx.annotation.OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
@@ -142,8 +148,12 @@ class BarcodeAnalyzer(private val context: Context, private val pointsViewModel:
                 .addOnSuccessListener { barcodes ->
                     for (barcode in barcodes) {
                         barcode.rawValue?.let {
-                            // Assuming 500 points are added for each QR code scanned
-                            pointsViewModel.addPoints(500)
+                            // Assuming 10000 points are added for each QR code scanned
+                            sharedViewModel.addPoints(10000)
+                            if (!id.isNullOrEmpty()) {
+                                sharedViewModel.removePolygonById(id)
+                                sharedViewModel.updateId("")
+                            }
                             Toast.makeText(context, "Scanned: $it", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -154,6 +164,8 @@ class BarcodeAnalyzer(private val context: Context, private val pointsViewModel:
                 .addOnCompleteListener {
                     imageProxy.close()
                 }
+        } else {
+            imageProxy.close()
         }
     }
 }
