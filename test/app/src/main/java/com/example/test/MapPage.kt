@@ -101,7 +101,7 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
         position = CameraPosition.fromLatLngZoom(aveiro, 11.5f)
     }
     val username by sharedViewModel.username
-    val polygonData by sharedViewModel.polygonData.observeAsState()
+    val polygonData = sharedViewModel.polygonData.value
 
     val storeData by remember {
         mutableStateOf(

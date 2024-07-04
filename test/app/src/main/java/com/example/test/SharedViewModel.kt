@@ -2,6 +2,7 @@ package com.example.test
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
@@ -19,11 +20,11 @@ class SharedViewModel(application: Application) : AndroidViewModel(application) 
     private val _points = MutableLiveData(sharedPreferences.getInt("points", 10000))
     val points: LiveData<Int> = _points
 
-    private val _id = MutableLiveData<String>(sharedPreferences.getString("id", ""))
-    val id: LiveData<String> = _id
+    private val _id = mutableStateOf(sharedPreferences.getString("id", "") ?: "")
+    val id: State<String> = _id
 
     private val _redeemedItems = MutableLiveData<MutableMap<String, Boolean>>(loadRedeemedItems())
-    val redeemedItems: LiveData<MutableMap<String, Boolean>> = _redeemedItems
+    // val redeemedItems: LiveData<MutableMap<String, Boolean>> = _redeemedItems
 
     private val _polygonData = MutableLiveData<List<PolygonData>>(loadPolygonData())
     val polygonData: LiveData<List<PolygonData>> = _polygonData
@@ -166,8 +167,13 @@ class SharedViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun updateId(newId: String) {
-        _id.value = newId
-        saveToPreferences("id", newId)
+        try {
+            _id.value = newId
+            saveToPreferences("id", newId)
+            Log.d("Message", id.value)
+        } catch (e: Exception) {
+           print(e)
+        }
     }
 
     fun addPoints(pointsToAdd: Int) {
@@ -178,7 +184,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application) 
     fun redeemItem(itemName: String, pointsToDeduct: Int): Boolean {
         val currentPoints = _points.value ?: 0
         val redeemed = _redeemedItems.value ?: mutableMapOf()
-        return if (currentPoints >= pointsToDeduct && !(redeemed[itemName] ?: false)) {
+        return if (currentPoints >= pointsToDeduct && redeemed[itemName] == true) {
             _points.value = currentPoints - pointsToDeduct
             redeemed[itemName] = true
             _redeemedItems.value = redeemed
@@ -195,8 +201,13 @@ class SharedViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun removePolygonById(polygonId: String) {
-        val updatedPolygonData = _polygonData.value?.filterNot { it.id == polygonId }
-        _polygonData.value = updatedPolygonData ?: emptyList()
+        try {
+            val updatedPolygonData = _polygonData.value?.filterNot { it.id == polygonId }
+            _polygonData.value = updatedPolygonData ?: emptyList()
+            Log.d("Message","${polygonData.value}")
+        } catch (e: Exception) {
+            print(e)
+        }
     }
 
     private val _username = mutableStateOf(sharedPreferences.getString("username", "") ?: "")
