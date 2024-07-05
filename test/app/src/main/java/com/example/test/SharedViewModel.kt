@@ -17,7 +17,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application) 
 
     private val sharedPreferences = application.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
-    private val _points = MutableLiveData(sharedPreferences.getInt("points", 10000))
+    private val _points = MutableLiveData(sharedPreferences.getInt("points", 0))
     val points: LiveData<Int> = _points
 
     private val _id = mutableStateOf(sharedPreferences.getString("id", "") ?: "")

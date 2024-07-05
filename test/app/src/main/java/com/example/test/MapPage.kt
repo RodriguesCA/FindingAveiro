@@ -355,7 +355,7 @@ fun LocationInfoDialog(title: String, snippet: String, onDismiss: () -> Unit, on
             Column () {
                 Text(snippet)
                 Spacer(modifier = Modifier.height(8.dp))
-                if (!deleteId.contains(id)) {
+                if (deleteId.contains(id)) {
                     Image(
                         painter = painterResource(id = image),
                         contentDescription = null,
