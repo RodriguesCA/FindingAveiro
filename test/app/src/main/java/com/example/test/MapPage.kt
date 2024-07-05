@@ -176,7 +176,7 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                 ),
                 title = "Praia da Costa Nova",
                 snippet = "Ve as casas riscas",
-                image = R.drawable.posto
+                image = R.drawable.casas
             ),
             PolygonData(
                 id = "6",
@@ -283,9 +283,6 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                 actions = {
                     IconButton(onClick = onCartClick) {
                         Icon(Icons.Filled.ShoppingCart, contentDescription = null)
-                    }
-                    IconButton(onClick = onProfileClick) {
-                        Icon(Icons.Filled.Person, contentDescription = null)
                     }
                 },
             )
