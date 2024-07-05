@@ -63,11 +63,12 @@ class QRCodeScannerActivity : ComponentActivity() {
 @Composable
 fun QRCodeScannerScreen(onButtonClick: () -> Unit, onArrowClick: () -> Unit, sharedViewModel: SharedViewModel) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+    val username by sharedViewModel.username
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("FindingAveiro") },
+                title = { Text(username) },
                 actions = {
                     IconButton(onClick = {
                         sharedViewModel.updateId("")
@@ -150,8 +151,8 @@ class BarcodeAnalyzer(private val context: Context, private val sharedViewModel:
                         barcode.rawValue?.let {
                             // Assuming 10000 points are added for each QR code scanned
                             sharedViewModel.addPoints(10000)
-                            if (!id.isNullOrEmpty()) {
-                                sharedViewModel.removePolygonById(id)
+                            if (id.isNotEmpty()) {
+                                sharedViewModel.updateDeletePoly(id)
                                 sharedViewModel.updateId("")
                             }
                             Toast.makeText(context, "Scanned: $it", Toast.LENGTH_SHORT).show()
