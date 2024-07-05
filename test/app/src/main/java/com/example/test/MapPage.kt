@@ -32,9 +32,10 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.foundation.Image
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -84,7 +85,8 @@ data class PolygonData(
     val id: String,
     val points: List<LatLng>,
     val title: String,
-    val snippet: String
+    val snippet: String,
+    val image: Int
 )
 data class StoreData(
     val id: String,
@@ -113,7 +115,9 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                     LatLng(40.62452855358944, -8.64976460361052), // top right corner
                 ),
                 title = "Universidade de Aveiro",
-                snippet = "Universidade de Aveiro"
+                snippet = "Universidade de Aveiro",
+                image = R.drawable.ua
+
             ),
             PolygonData(
                 id = "2",
@@ -125,7 +129,8 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                     LatLng(40.63066400728303, -8.653815495400446), // bottom right corner
                 ),
                 title = "Parque da Macaca",
-                snippet = "Não sejas assaltado"
+                snippet = "Não sejas assaltado",
+                image = R.drawable.macaca
             ),
             PolygonData(
                 id = "3",
@@ -139,7 +144,8 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                     LatLng(40.639593752531106, -8.655944809760609), // extra
                 ),
                 title = "Salinas de Aveiro",
-                snippet = "Bem Salgado"
+                snippet = "Bem Salgado",
+                image = R.drawable.salinas
             ),
             PolygonData(
                 id = "4",
@@ -156,7 +162,8 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                     LatLng(40.65476769594774, -8.702753020122302), // extra
                 ),
                 title = "Praia da Barra",
-                snippet = "Passa no Setimo"
+                snippet = "Passa no Setimo",
+                image = R.drawable.paredao
             ),
             PolygonData(
                 id = "5",
@@ -168,7 +175,8 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                     LatLng(40.626249207879724, -8.682347226061006), // extra
                 ),
                 title = "Praia da Costa Nova",
-                snippet = "Ve as casas riscas"
+                snippet = "Ve as casas riscas",
+                image = R.drawable.posto
             ),
             PolygonData(
                 id = "6",
@@ -181,7 +189,9 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                     LatLng(40.63787867676456, -8.65856742392844), // top right corner
                 ),
                 title = "Passadiços de Aveiro",
-                snippet = "Não Caias a Agua"
+                snippet = "Não Caias a Agua",
+                image = R.drawable.posto
+
             ),
             PolygonData(
                 id = "7",
@@ -195,7 +205,8 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                     LatLng(40.630406337092076, -8.642941462098724), // top right corner
                 ),
                 title= "Fabrica do Melia",
-                snippet ="Não vais ser explorado"
+                snippet ="Não vais ser explorado",
+                image = R.drawable.fabrica
             ),
             PolygonData(
                 id = "8",
@@ -208,7 +219,8 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                     LatLng(40.64406001340473, -8.641126114819752), // top left corner
                 ),
                 title = "Pontes",
-                snippet = "Atravessa para o QRCODE"
+                snippet = "Atravessa para o QRCODE",
+                image = R.drawable.lacos
             ),
             PolygonData(
                 id = "9",
@@ -219,7 +231,8 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                     LatLng(40.64089602753747, -8.657386395925464), // bottom left corner
                 ),
                 title = "Praça de Aveiro",
-                snippet = "Vai ao Mercado"
+                snippet = "Vai ao Mercado",
+                image = R.drawable.praca
             )
         )
         )}
@@ -328,19 +341,25 @@ fun MainMap(sharedViewModel: SharedViewModel, onCartClick: () -> Unit, onProfile
                 sharedViewModel.updateId(markerData.id)
             },
             id = markerData.id,
-            deleteId = deleteId
+            deleteId = deleteId,
+            image = markerData.image
         )
     }
 }
 @Composable
-fun LocationInfoDialog(title: String, snippet: String, onDismiss: () -> Unit, onQRCodeClick: () -> Unit, id: String, deleteId: List<String>) {
+fun LocationInfoDialog(title: String, snippet: String, onDismiss: () -> Unit, onQRCodeClick: () -> Unit, id: String, deleteId: List<String>, image: Int) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
             Column {
                 Text(snippet)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp)
+                Image(
+                    painter = painterResource(id = image),
+                    contentDescription = null,
+                    modifier = Modifier.height(100.dp)
+                )
             }
         },
         confirmButton = {
