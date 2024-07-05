@@ -352,14 +352,16 @@ fun LocationInfoDialog(title: String, snippet: String, onDismiss: () -> Unit, on
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            Column {
+            Column () {
                 Text(snippet)
-                Spacer(modifier = Modifier.height(8.dp)
-                Image(
-                    painter = painterResource(id = image),
-                    contentDescription = null,
-                    modifier = Modifier.height(100.dp)
-                )
+                Spacer(modifier = Modifier.height(8.dp))
+                if (!deleteId.contains(id)) {
+                    Image(
+                        painter = painterResource(id = image),
+                        contentDescription = null,
+                        modifier = Modifier.height(100.dp)
+                    )
+                }
             }
         },
         confirmButton = {
